@@ -2,7 +2,17 @@
   "originator": "ATCM",
   "requestId": "C22dA7cB-CBEE-D7ee-6BBc-ACF2cB50cBDF",
   "acknowledgement": {
-    "accountNumber": "123456780"
+    "accountNumber": "987654321",
+    "minorCreditors": [
+      {
+        "minorCreditorId": "b2c3d4e5-6789-01bc-def0-234567890abc",
+        "minorCreditorAccountNumber": "MC12345678"
+      },
+      {
+        "minorCreditorId": "c3d4e5f6-7890-12cd-ef01-34567890abcd",
+        "minorCreditorAccountNumber": "MC87654321"
+      }
+    ]
   },
   "exportStatus": "ENFORCEMENT_REQUEST_SELECTED",
   "updated": "2018-06-01T09:00:00Z"
