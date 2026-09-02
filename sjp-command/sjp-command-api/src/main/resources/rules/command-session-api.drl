@@ -25,6 +25,15 @@ rule "Command - Rule for end session"
     $outcome.setSuccess(true);
 end
 
+rule "Command - Rule for update session"
+  when
+    $outcome: Outcome();
+    $action: Action(name == "sjp.update-session-bdf");
+    eval(userAndGroupProvider.isMemberOfAnyOfTheSuppliedGroups($action, RuleConstants.getSystemUsers()));
+  then
+    $outcome.setSuccess(true);
+end
+
 rule "Command - Rule for assigning case"
   when
     $outcome: Outcome();

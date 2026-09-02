@@ -116,12 +116,24 @@ public class Session implements Serializable {
         return courtHouseCode;
     }
 
+    public void setCourtHouseCode(final String courtHouseCode) {
+        this.courtHouseCode = courtHouseCode;
+    }
+
     public String getCourtHouseName() {
         return courtHouseName;
     }
 
+    public void setCourtHouseName(final String courtHouseName) {
+        this.courtHouseName = courtHouseName;
+    }
+
     public String getLocalJusticeAreaNationalCourtCode() {
         return localJusticeAreaNationalCourtCode;
+    }
+
+    public void setLocalJusticeAreaNationalCourtCode(final String localJusticeAreaNationalCourtCode) {
+        this.localJusticeAreaNationalCourtCode = localJusticeAreaNationalCourtCode;
     }
 
     public SessionType getType() {
@@ -130,6 +142,10 @@ public class Session implements Serializable {
 
     public Optional<String> getMagistrate() {
         return Optional.ofNullable(magistrate);
+    }
+
+    public void setMagistrate(final String magistrate) {
+        this.magistrate = magistrate;
     }
 
     public ZonedDateTime getStartedAt() {

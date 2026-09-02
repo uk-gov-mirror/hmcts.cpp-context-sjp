@@ -40,6 +40,7 @@ import uk.gov.justice.services.eventsourcing.source.core.exception.EventStreamEx
 import uk.gov.justice.services.messaging.JsonEnvelope;
 import uk.gov.justice.services.messaging.MetadataBuilder;
 import uk.gov.justice.services.test.utils.common.helper.StoppedClock;
+import uk.gov.moj.cpp.sjp.domain.SessionType;
 import uk.gov.moj.cpp.sjp.domain.aggregate.Session;
 import uk.gov.moj.cpp.sjp.event.session.DelegatedPowersSessionEnded;
 import uk.gov.moj.cpp.sjp.event.session.DelegatedPowersSessionStarted;
@@ -47,6 +48,7 @@ import uk.gov.moj.cpp.sjp.event.session.MagistrateSessionEnded;
 import uk.gov.moj.cpp.sjp.event.session.MagistrateSessionStarted;
 import uk.gov.moj.cpp.sjp.event.session.ResetAocpSession;
 import uk.gov.moj.cpp.sjp.event.session.SessionEnded;
+import uk.gov.moj.cpp.sjp.event.session.SessionUpdatedBdf;
 
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
@@ -73,6 +75,7 @@ public class SessionHandlerTest {
     private static final String START_SESSION_COMMAND = "sjp.command.start-session";
     private static final String END_SESSION_COMMAND = "sjp.command.end-session";
     private static final String RESET_SESSION_COMMAND = "sjp.command.reset-aocp-session";
+    private static final String UPDATE_SESSION_BDF_COMMAND = "sjp.command.update-session-bdf";
     @Mock
     private EventSource eventSource;
 
@@ -98,7 +101,8 @@ public class SessionHandlerTest {
             MagistrateSessionEnded.class,
             DelegatedPowersSessionStarted.class,
             DelegatedPowersSessionEnded.class,
-            ResetAocpSession.class);
+            ResetAocpSession.class,
+            SessionUpdatedBdf.class);
 
     @Spy
     private Clock clock = new StoppedClock(ZonedDateTime.now(UTC));
@@ -131,7 +135,8 @@ public class SessionHandlerTest {
                 .with(allOf(
                         method("startSession").thatHandles(START_SESSION_COMMAND),
                         method("endSession").thatHandles(END_SESSION_COMMAND),
-                        method("resetAocpSessionRequest").thatHandles(RESET_SESSION_COMMAND)
+                        method("resetAocpSessionRequest").thatHandles(RESET_SESSION_COMMAND),
+                        method("updateSessionBdf").thatHandles(UPDATE_SESSION_BDF_COMMAND)
                 )));
     }
 
@@ -248,6 +253,88 @@ public class SessionHandlerTest {
 
     }
 
+
+    @Test
+    public void shouldUpdateSessionBdfWithAllFields() throws EventStreamException {
+
+        final String magistrate = randomAlphanumeric(20);
+        final UUID legalAdviserUserId = randomUUID();
+
+        final JsonEnvelope updateSessionCommand = envelopeFrom(metadataWithRandomUUID(UPDATE_SESSION_BDF_COMMAND),
+                createObjectBuilder()
+                        .add("sessionId", sessionId.toString())
+                        .add("magistrate", magistrate)
+                        .add("courtHouseCode", courtHouseCode)
+                        .add("courtHouseName", courtHouseName)
+                        .add("localJusticeAreaNationalCourtCode", localJusticeAreaNationalCourtCode)
+                        .add("type", SessionType.MAGISTRATE.name())
+                        .add("legalAdviserUserId", legalAdviserUserId.toString())
+                        .build());
+
+        final SessionUpdatedBdf sessionUpdatedBdf = new SessionUpdatedBdf(sessionId, Optional.of(magistrate), Optional.of(courtHouseCode), Optional.of(courtHouseName),
+                Optional.of(localJusticeAreaNationalCourtCode), Optional.of(SessionType.MAGISTRATE), Optional.of(legalAdviserUserId));
+
+        when(eventSource.getStreamById(sessionId)).thenReturn(sessionEventStream);
+        when(aggregateService.get(sessionEventStream, Session.class)).thenReturn(session);
+        when(session.updateSessionBdf(sessionId, Optional.of(magistrate), Optional.of(courtHouseCode), Optional.of(courtHouseName),
+                Optional.of(localJusticeAreaNationalCourtCode), Optional.of(SessionType.MAGISTRATE), Optional.of(legalAdviserUserId)))
+                .thenReturn(Stream.of(sessionUpdatedBdf));
+
+        sessionHandler.updateSessionBdf(updateSessionCommand);
+
+        assertThat(sessionEventStream, eventStreamAppendedWith(
+                streamContaining(
+                        jsonEnvelope(
+                                withMetadataEnvelopedFrom(updateSessionCommand)
+                                        .withName(SessionUpdatedBdf.EVENT_NAME),
+                                payloadIsJson(allOf(
+                                        withJsonPath("$.sessionId", equalTo(sessionId.toString())),
+                                        withJsonPath("$.magistrate", equalTo(magistrate)),
+                                        withJsonPath("$.courtHouseCode", equalTo(courtHouseCode)),
+                                        withJsonPath("$.courtHouseName", equalTo(courtHouseName)),
+                                        withJsonPath("$.localJusticeAreaNationalCourtCode", equalTo(localJusticeAreaNationalCourtCode)),
+                                        withJsonPath("$.type", equalTo(SessionType.MAGISTRATE.name())),
+                                        withJsonPath("$.legalAdviserUserId", equalTo(legalAdviserUserId.toString()))
+                                ))))));
+    }
+
+    @Test
+    public void shouldUpdateSessionBdfWithOnlyMagistrate() throws EventStreamException {
+
+        final String magistrate = randomAlphanumeric(20);
+
+        final JsonEnvelope updateSessionCommand = envelopeFrom(metadataWithRandomUUID(UPDATE_SESSION_BDF_COMMAND),
+                createObjectBuilder()
+                        .add("sessionId", sessionId.toString())
+                        .add("magistrate", magistrate)
+                        .build());
+
+        final SessionUpdatedBdf sessionUpdatedBdf = new SessionUpdatedBdf(sessionId, Optional.of(magistrate), Optional.empty(), Optional.empty(),
+                Optional.empty(), Optional.empty(), Optional.empty());
+
+        when(eventSource.getStreamById(sessionId)).thenReturn(sessionEventStream);
+        when(aggregateService.get(sessionEventStream, Session.class)).thenReturn(session);
+        when(session.updateSessionBdf(sessionId, Optional.of(magistrate), Optional.empty(), Optional.empty(),
+                Optional.empty(), Optional.empty(), Optional.empty()))
+                .thenReturn(Stream.of(sessionUpdatedBdf));
+
+        sessionHandler.updateSessionBdf(updateSessionCommand);
+
+        assertThat(sessionEventStream, eventStreamAppendedWith(
+                streamContaining(
+                        jsonEnvelope(
+                                withMetadataEnvelopedFrom(updateSessionCommand)
+                                        .withName(SessionUpdatedBdf.EVENT_NAME),
+                                payloadIsJson(allOf(
+                                        withJsonPath("$.sessionId", equalTo(sessionId.toString())),
+                                        withJsonPath("$.magistrate", equalTo(magistrate)),
+                                        withoutJsonPath("$.courtHouseCode"),
+                                        withoutJsonPath("$.courtHouseName"),
+                                        withoutJsonPath("$.localJusticeAreaNationalCourtCode"),
+                                        withoutJsonPath("$.type"),
+                                        withoutJsonPath("$.legalAdviserUserId")
+                                ))))));
+    }
 
     private void shouldEndSession(final SessionEnded sessionEnded) throws EventStreamException {
         final JsonEnvelope endSessionCommand = envelopeFrom(metadataWithRandomUUID(END_SESSION_COMMAND),

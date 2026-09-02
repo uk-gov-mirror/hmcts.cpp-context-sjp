@@ -23,6 +23,7 @@ import uk.gov.justice.services.eventsourcing.source.core.EventStream;
 import uk.gov.justice.services.eventsourcing.source.core.exception.EventStreamException;
 import uk.gov.justice.services.messaging.JsonEnvelope;
 import uk.gov.justice.services.messaging.JsonObjects;
+import uk.gov.moj.cpp.sjp.domain.SessionType;
 import uk.gov.moj.cpp.sjp.domain.aggregate.Session;
 import uk.gov.moj.cpp.sjp.event.session.ResetAocpSession;
 
@@ -92,6 +93,21 @@ public class SessionHandler {
     public void endSession(final JsonEnvelope endSessionCommand) throws EventStreamException {
         final UUID sessionId = UUID.fromString(endSessionCommand.payloadAsJsonObject().getString(SESSION_ID));
         applyToSessionAggregate(endSessionCommand, session -> session.endSession(sessionId, clock.now()));
+    }
+
+    @Handles("sjp.command.update-session-bdf")
+    public void updateSessionBdf(final JsonEnvelope updateSessionCommand) throws EventStreamException {
+        final JsonObject updateSession = updateSessionCommand.payloadAsJsonObject();
+        final UUID sessionId = UUID.fromString(updateSession.getString(SESSION_ID));
+        final Optional<String> magistrate = JsonObjects.getString(updateSession, MAGISTRATE);
+        final Optional<String> courtHouseCode = JsonObjects.getString(updateSession, COURT_HOUSE_CODE);
+        final Optional<String> courtHouseName = JsonObjects.getString(updateSession, COURT_HOUSE_NAME);
+        final Optional<String> localJusticeAreaNationalCourtCode = JsonObjects.getString(updateSession, LOCAL_JUSTICE_AREA_NATIONAL_COURT_CODE);
+        final Optional<SessionType> type = JsonObjects.getString(updateSession, "type").map(SessionType::valueOf);
+        final Optional<UUID> legalAdviserUserId = JsonObjects.getString(updateSession, "legalAdviserUserId").map(UUID::fromString);
+
+        applyToSessionAggregate(updateSessionCommand, session ->
+                session.updateSessionBdf(sessionId, magistrate, courtHouseCode, courtHouseName, localJusticeAreaNationalCourtCode, type, legalAdviserUserId));
     }
 
     @Handles("sjp.command.reset-aocp-session")

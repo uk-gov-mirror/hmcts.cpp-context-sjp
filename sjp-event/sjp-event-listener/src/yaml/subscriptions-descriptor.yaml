@@ -137,6 +137,9 @@ subscriptions_descriptor:
               - name: sjp.events.aocp-session-started
                 schema_uri: http://justice.gov.uk/json/schemas/domains/sjp/event/aocp-session-started.json
 
+              - name: sjp.events.session-updated-bdf
+                schema_uri: http://justice.gov.uk/json/schemas/domains/sjp/event/session-updated-bdf.json
+
               - name: sjp.events.magistrate-session-ended
                 schema_uri: http://justice.gov.uk/json/schemas/domains/sjp/event/magistrate-session-ended.json
 

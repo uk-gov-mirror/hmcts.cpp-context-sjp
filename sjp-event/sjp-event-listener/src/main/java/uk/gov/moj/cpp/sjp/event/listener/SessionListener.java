@@ -1,5 +1,6 @@
 package uk.gov.moj.cpp.sjp.event.listener;
 
+import static java.util.Optional.ofNullable;
 import static uk.gov.justice.services.core.annotation.Component.EVENT_LISTENER;
 
 import uk.gov.justice.services.common.converter.JsonObjectToObjectConverter;
@@ -13,6 +14,7 @@ import uk.gov.moj.cpp.sjp.event.session.DelegatedPowersSessionEnded;
 import uk.gov.moj.cpp.sjp.event.session.DelegatedPowersSessionStarted;
 import uk.gov.moj.cpp.sjp.event.session.MagistrateSessionEnded;
 import uk.gov.moj.cpp.sjp.event.session.MagistrateSessionStarted;
+import uk.gov.moj.cpp.sjp.event.session.SessionUpdatedBdf;
 import uk.gov.moj.cpp.sjp.persistence.entity.Session;
 import uk.gov.moj.cpp.sjp.persistence.repository.SessionRepository;
 
@@ -98,6 +100,20 @@ public class SessionListener {
         sessionRepository.save(session);
     }
 
+
+    @Transactional
+    @Handles(SessionUpdatedBdf.EVENT_NAME)
+    public void handleSessionUpdatedBdf(final JsonEnvelope sessionUpdatedEvent) {
+        final JsonObject sessionUpdated = sessionUpdatedEvent.payloadAsJsonObject();
+        final Session session = sessionRepository.findBy(UUID.fromString(sessionUpdated.getString(SESSION_ID)));
+
+        ofNullable(sessionUpdated.getString("magistrate", null)).ifPresent(session::setMagistrate);
+        ofNullable(sessionUpdated.getString(COURT_HOUSE_CODE, null)).ifPresent(session::setCourtHouseCode);
+        ofNullable(sessionUpdated.getString(COURT_HOUSE_NAME, null)).ifPresent(session::setCourtHouseName);
+        ofNullable(sessionUpdated.getString(LEGAL_JUSTICE_AREA_NATIONAL_COURT_CODE, null)).ifPresent(session::setLocalJusticeAreaNationalCourtCode);
+        ofNullable(sessionUpdated.getString("type", null)).ifPresent(type -> session.setType(SessionType.valueOf(type)));
+        ofNullable(sessionUpdated.getString("legalAdviserUserId", null)).ifPresent(legalAdviserUserId -> session.setLegalAdviserUserId(UUID.fromString(legalAdviserUserId)));
+    }
 
     @Transactional
     @Handles(DelegatedPowersSessionEnded.EVENT_NAME)

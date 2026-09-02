@@ -19,6 +19,7 @@ import uk.gov.moj.cpp.sjp.event.session.DelegatedPowersSessionEnded;
 import uk.gov.moj.cpp.sjp.event.session.DelegatedPowersSessionStarted;
 import uk.gov.moj.cpp.sjp.event.session.MagistrateSessionEnded;
 import uk.gov.moj.cpp.sjp.event.session.MagistrateSessionStarted;
+import uk.gov.moj.cpp.sjp.event.session.SessionUpdatedBdf;
 import uk.gov.moj.cpp.sjp.event.session.SessionStarted;
 
 import java.time.ZonedDateTime;
@@ -106,6 +107,26 @@ public class Session implements Aggregate {
         return apply(streamBuilder.build());
     }
 
+    public Stream<Object> updateSessionBdf(
+            final UUID sessionId,
+            final Optional<String> magistrate,
+            final Optional<String> courtHouseCode,
+            final Optional<String> courtHouseName,
+            final Optional<String> localJusticeAreaNationalCourtCode,
+            final Optional<SessionType> type,
+            final Optional<UUID> legalAdviserUserId) {
+
+        final Stream.Builder<Object> streamBuilder = Stream.builder();
+
+        if (sessionState == SessionState.NOT_EXISTING) {
+            LOGGER.warn("Session can not be updated - session {} does not exist", sessionId);
+        } else {
+            streamBuilder.add(new SessionUpdatedBdf(sessionId, magistrate, courtHouseCode, courtHouseName, localJusticeAreaNationalCourtCode, type, legalAdviserUserId));
+        }
+
+        return apply(streamBuilder.build());
+    }
+
     public Stream<Object> endSession(final UUID sessionId, final ZonedDateTime endedAt) {
 
         final Stream.Builder<Object> streamBuilder = Stream.builder();
@@ -173,6 +194,13 @@ public class Session implements Aggregate {
                     magistrate = null;
                     sessionType = AOCP;
                     prosecutors = sessionStarted.getProsecutors();
+                }),
+                when(SessionUpdatedBdf.class).apply(sessionUpdated -> {
+                    sessionUpdated.getMagistrate().ifPresent(value -> magistrate = value);
+                    sessionUpdated.getCourtHouseCode().ifPresent(value -> courtHouseCode = value);
+                    sessionUpdated.getCourtHouseName().ifPresent(value -> courtHouseName = value);
+                    sessionUpdated.getLocalJusticeAreaNationalCourtCode().ifPresent(value -> localJusticeAreaNationalCourtCode = value);
+                    sessionUpdated.getType().ifPresent(value -> sessionType = value);
                 }),
                 when(MagistrateSessionEnded.class).apply(sessionEnded -> sessionState = SessionState.ENDED),
                 when(DelegatedPowersSessionEnded.class).apply(sessionEnded -> sessionState = SessionState.ENDED),
