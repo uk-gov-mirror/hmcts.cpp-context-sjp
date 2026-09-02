@@ -5,6 +5,9 @@ import static java.util.UUID.randomUUID;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.justice.services.messaging.JsonEnvelope.envelopeFrom;
@@ -28,6 +31,7 @@ import uk.gov.moj.cpp.sjp.event.session.DelegatedPowersSessionEnded;
 import uk.gov.moj.cpp.sjp.event.session.DelegatedPowersSessionStarted;
 import uk.gov.moj.cpp.sjp.event.session.MagistrateSessionEnded;
 import uk.gov.moj.cpp.sjp.event.session.MagistrateSessionStarted;
+import uk.gov.moj.cpp.sjp.event.session.SessionUpdatedBdf;
 import uk.gov.moj.cpp.sjp.persistence.entity.Session;
 import uk.gov.moj.cpp.sjp.persistence.repository.SessionRepository;
 
@@ -270,7 +274,8 @@ public class SessionListenerTest {
                         method("handleDelegatedPowersSessionStarted").thatHandles(DelegatedPowersSessionStarted.EVENT_NAME),
                         method("handleMagistrateSessionStarted").thatHandles(MagistrateSessionStarted.EVENT_NAME),
                         method("handleDelegatedPowersSessionEnded").thatHandles(DelegatedPowersSessionEnded.EVENT_NAME),
-                        method("handleMagistrateSessionEnded").thatHandles(MagistrateSessionEnded.EVENT_NAME)
+                        method("handleMagistrateSessionEnded").thatHandles(MagistrateSessionEnded.EVENT_NAME),
+                        method("handleSessionUpdatedBdf").thatHandles(SessionUpdatedBdf.EVENT_NAME)
                 )));
     }
 
@@ -334,6 +339,53 @@ public class SessionListenerTest {
         assertThat(session.getEndedAt().isPresent(), equalTo(false));
         assertThat(session.getProsecutors().get(0), equalTo(TFL));
         assertThat(session.getProsecutors().get(1), equalTo(DVL));
+    }
+
+    @Test
+    public void shouldHandleSessionUpdatedBdfEventWithAllFields() {
+
+        final JsonEnvelope sessionUpdatedBdf = envelopeFrom(metadataWithRandomUUID(SessionUpdatedBdf.EVENT_NAME),
+                createObjectBuilder()
+                        .add("sessionId", sessionId.toString())
+                        .add("magistrate", magistrate)
+                        .add("courtHouseCode", courtHouseCode)
+                        .add("courtHouseName", courtHouseName)
+                        .add("localJusticeAreaNationalCourtCode", localJusticeAreaNationalCourtCode)
+                        .add("type", SessionType.MAGISTRATE.name())
+                        .add("legalAdviserUserId", legalAdviserUserId.toString())
+                        .build());
+
+        when(sessionRepository.findBy(sessionId)).thenReturn(existingSession);
+
+        sessionListener.handleSessionUpdatedBdf(sessionUpdatedBdf);
+
+        verify(existingSession).setMagistrate(magistrate);
+        verify(existingSession).setCourtHouseCode(courtHouseCode);
+        verify(existingSession).setCourtHouseName(courtHouseName);
+        verify(existingSession).setLocalJusticeAreaNationalCourtCode(localJusticeAreaNationalCourtCode);
+        verify(existingSession).setType(SessionType.MAGISTRATE);
+        verify(existingSession).setLegalAdviserUserId(legalAdviserUserId);
+    }
+
+    @Test
+    public void shouldNotUpdateFieldsAbsentFromSessionUpdatedBdfEvent() {
+
+        final JsonEnvelope sessionUpdatedBdf = envelopeFrom(metadataWithRandomUUID(SessionUpdatedBdf.EVENT_NAME),
+                createObjectBuilder()
+                        .add("sessionId", sessionId.toString())
+                        .add("magistrate", magistrate)
+                        .build());
+
+        when(sessionRepository.findBy(sessionId)).thenReturn(existingSession);
+
+        sessionListener.handleSessionUpdatedBdf(sessionUpdatedBdf);
+
+        verify(existingSession).setMagistrate(magistrate);
+        verify(existingSession, never()).setCourtHouseCode(anyString());
+        verify(existingSession, never()).setCourtHouseName(anyString());
+        verify(existingSession, never()).setLocalJusticeAreaNationalCourtCode(anyString());
+        verify(existingSession, never()).setType(any(SessionType.class));
+        verify(existingSession, never()).setLegalAdviserUserId(any(UUID.class));
     }
 
     @Test

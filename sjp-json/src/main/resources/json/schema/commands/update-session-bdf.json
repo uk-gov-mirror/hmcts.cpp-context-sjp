@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "http://justice.gov.uk/json/schemas/domains/sjp/commands/sjp.update-session-bdf.json",
+  "type": "object",
+  "properties": {
+    "sessionId": {
+      "$ref": "http://justice.gov.uk/domain/core/common/definitions.json#/definitions/uuid"
+    },
+    "magistrate": {
+      "type": "string"
+    },
+    "courtHouseCode": {
+      "type": "string"
+    },
+    "courtHouseName": {
+      "type": "string"
+    },
+    "localJusticeAreaNationalCourtCode": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["MAGISTRATE", "DELEGATED_POWERS", "AOCP"]
+    },
+    "legalAdviserUserId": {
+      "$ref": "http://justice.gov.uk/domain/core/common/definitions.json#/definitions/uuid"
+    }
+  },
+  "required": [
+    "sessionId"
+  ],
+  "additionalProperties": false
+}

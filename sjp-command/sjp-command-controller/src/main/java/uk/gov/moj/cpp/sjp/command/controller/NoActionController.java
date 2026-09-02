@@ -72,6 +72,11 @@ public class NoActionController {
         send(envelope);
     }
 
+    @Handles("sjp.command.update-session-bdf")
+    public void updateSessionBdf(final JsonEnvelope envelope) {
+        send(envelope);
+    }
+
     @Handles("sjp.command.reset-aocp-session")
     public void resetAocpSession(final JsonEnvelope envelope) {
         send(envelope);

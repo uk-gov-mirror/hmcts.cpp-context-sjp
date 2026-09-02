@@ -19,6 +19,14 @@ rule "Command - Rule for end session"
     $outcome.setSuccess(true);
 end
 
+rule "Command - Rule for update session"
+  when
+    $outcome: Outcome();
+    $action: Action(name == "sjp.command.update-session-bdf");
+  then
+    $outcome.setSuccess(true);
+end
+
 rule "Command - Rule for reset aocp session request"
   when
     $outcome: Outcome();

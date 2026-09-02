@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "magistrate": {
+      "type": "string"
+    },
+    "courtHouseCode": {
+      "type": "string"
+    },
+    "courtHouseName": {
+      "type": "string"
+    },
+    "localJusticeAreaNationalCourtCode": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["MAGISTRATE", "DELEGATED_POWERS", "AOCP"]
+    },
+    "legalAdviserUserId": {
+      "$ref": "http://justice.gov.uk/domain/core/common/definitions.json#/definitions/uuid"
+    }
+  },
+  "minProperties": 1,
+  "additionalProperties": false
+}

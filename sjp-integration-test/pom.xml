@@ -4,7 +4,7 @@
     <parent>
         <groupId>uk.gov.moj.cpp.sjp</groupId>
         <artifactId>sjp-parent</artifactId>
-        <version>17.104.194-SNAPSHOT</version>
+        <version>17.104.194-REL-3RD-LINE-2627-SNAPSHOT</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>

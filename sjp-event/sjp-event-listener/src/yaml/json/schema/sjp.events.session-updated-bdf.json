@@ -1,0 +1,5 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "http://justice.gov.uk/json/schemas/domains/sjp/event/session-updated-bdf.json",
+  "$ref": "http://justice.gov.uk/json/schemas/domains/sjp/events/session-updated-bdf.json"
+}

@@ -502,6 +502,9 @@ baseUri: http://localhost:8080/sjp-command-api/command/api/rest/sjp
       (mapping):
           requestType: application/vnd.sjp.assign-next-case+json
           name: sjp.assign-next-case
+      (mapping):
+          requestType: application/vnd.sjp.update-session-bdf+json
+          name: sjp.update-session-bdf
       ...
     body:
       application/vnd.sjp.start-session+json:
@@ -511,6 +514,11 @@ baseUri: http://localhost:8080/sjp-command-api/command/api/rest/sjp
           !include json/schema/sjp.start-session.json
       application/vnd.sjp.end-session+json: !!null
       application/vnd.sjp.assign-next-case+json: !!null
+      application/vnd.sjp.update-session-bdf+json:
+        example:
+          !include json/sjp.update-session-bdf.json
+        schema:
+          !include json/schema/sjp.update-session-bdf.json
     responses:
       202:
         description: Accepted
